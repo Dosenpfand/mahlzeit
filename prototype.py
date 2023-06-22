@@ -106,7 +106,11 @@ def filter_restaurants_add_ratings(places, count_process=None):
                 break
 
             query = f"{restaurant['Vertragspartner']}, {restaurant['Adresse']}, {restaurant['Stadt']}"
-            rating = get_rating(query)
+            try:
+                rating = get_rating(query)
+            except requests.exceptions.ConnectionError:
+                # TODO: warn
+                break
             restaurants[idx]["rating"] = rating
 
             count_done += 1
@@ -150,5 +154,5 @@ if __name__ == "__main__":
     coords = get_coords()
     scrape_sodexo(coords)
     places = merge_and_clean_dump(coords)
-    restaurants = filter_restaurants_add_ratings(places, 0)
+    restaurants = filter_restaurants_add_ratings(places)
     write_geojson(restaurants)
