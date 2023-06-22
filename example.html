@@ -30,7 +30,35 @@
 		}
 
 		.marker-cluster-default div {
-			background-color: rgba(120, 120, 120, 0.6);
+			background-color: rgba(255, 255, 255, 0.6);
+		}
+
+		.info {
+			padding: 6px 8px;
+			font: 14px/16px Arial, Helvetica, sans-serif;
+			background: white;
+			background: rgba(255, 255, 255, 0.8);
+			box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+			border-radius: 5px;
+		}
+
+		.info h4 {
+			margin: 0 0 5px;
+			color: #777;
+		}
+
+		.legend {
+			text-align: left;
+			line-height: 18px;
+			color: #555;
+		}
+
+		.legend i {
+			width: 18px;
+			height: 18px;
+			float: left;
+			margin-right: 8px;
+			opacity: 0.7;
 		}
 	</style>
 </head>
@@ -39,29 +67,41 @@
 	<div id='map'></div>
 	<script src="output/restaurants.js" type="text/javascript"></script>
 	<script>
+		var greenIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png';
+		var yellowIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png'
+		var orangeIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png'
+		var redIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png'
+		var greyIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png'
 		var greenIcon = new L.Icon({
-			iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+			iconUrl: greenIconUrl,
 			iconSize: [25, 41],
 			iconAnchor: [12, 41],
 			popupAnchor: [1, -34],
 			shadowSize: [41, 41]
 		});
 		var yellowIcon = new L.Icon({
-			iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png',
+			iconUrl: yellowIconUrl,
+			iconSize: [25, 41],
+			iconAnchor: [12, 41],
+			popupAnchor: [1, -34],
+			shadowSize: [41, 41]
+		});
+		var orangeIcon = new L.Icon({
+			iconUrl: orangeIconUrl,
 			iconSize: [25, 41],
 			iconAnchor: [12, 41],
 			popupAnchor: [1, -34],
 			shadowSize: [41, 41]
 		});
 		var redIcon = new L.Icon({
-			iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+			iconUrl: redIconUrl,
 			iconSize: [25, 41],
 			iconAnchor: [12, 41],
 			popupAnchor: [1, -34],
 			shadowSize: [41, 41]
 		});
 		var greyIcon = new L.Icon({
-			iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png',
+			iconUrl: greyIconUrl,
 			iconSize: [25, 41],
 			iconAnchor: [12, 41],
 			popupAnchor: [1, -34],
@@ -69,7 +109,7 @@
 		});
 
 		var map = L.map('map').setView([48.2020, 16.4026], 13);
-		const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		const tiles = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
 			maxZoom: 19,
 			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 		}).addTo(map);
@@ -78,13 +118,14 @@
 			showCoverageOnHover: false, iconCreateFunction: function (cluster) {
 				var childCount = cluster.getChildCount();
 				var c = ' marker-cluster';
-				return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster-default' + c, iconSize: new L.Point(40, 40) });
+				return new L.DivIcon({ html: '<div><span><b>' + childCount + '</b></span></div>', className: 'marker-cluster-default' + c, iconSize: new L.Point(40, 40) });
 			}
 		});
 
 		function onEachFeature(feature, layer) {
 			if (feature.properties && feature.properties.name) {
-				let popupContent = feature.properties.name;
+				let popupContent = feature.properties.name + '<br />' 
+				+ 'Rating: ' + feature.properties.rating;
 				layer.bindPopup(popupContent);
 			}
 		}
@@ -101,6 +142,8 @@
 				} else if (feature.properties.rating >= 4.0) {
 					icon = yellowIcon;
 				} else if (feature.properties.rating >= 3.5) {
+					icon = orangeIcon;
+				} else if (feature.properties.rating >= 0.1) {
 					icon = redIcon;
 				} else {
 					icon = greyIcon;
@@ -111,6 +154,22 @@
 
 		markers.addLayer(geoJsonLayer);
 		map.addLayer(markers);
+
+		var legend = L.control({ position: 'bottomright' });
+		legend.onAdd = function (map) {
+			var div = L.DomUtil.create('div', 'info legend'),
+				ratings = [4.5, 4, 3.5, 0, 'N/A'],
+				labels = [greenIconUrl, yellowIconUrl, orangeIconUrl, redIconUrl, greyIconUrl];
+			for (var i = 0; i < ratings.length; i++) {
+				icon = yellowIcon.createIcon();
+				div.innerHTML +=
+					icon.outerHTML
+					+ '<img src="' + labels[i] + '" height="41" />'
+					+ (typeof ratings[i+1] === 'undefined' ? ' ' : '&ge; ') + ratings[i] + '<br />';
+			}
+			return div;
+		};
+		legend.addTo(map);
 	</script>
 </body>
 
