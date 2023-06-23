@@ -124,8 +124,8 @@
 
 		function onEachFeature(feature, layer) {
 			if (feature.properties && feature.properties.name) {
-				let popupContent = feature.properties.name + '<br />' 
-				+ 'Rating: ' + feature.properties.rating;
+				let popupContent = feature.properties.name + '<br />'
+					+ 'Rating: ' + feature.properties.rating;
 				layer.bindPopup(popupContent);
 			}
 		}
@@ -163,8 +163,8 @@
 			for (var i = 0; i < ratings.length; i++) {
 				icon = yellowIcon.createIcon();
 				div.innerHTML +=
-					+ '<img src="' + labels[i] + '" height="41" />'
-					+ (typeof ratings[i+1] === 'undefined' ? ' ' : '&ge; ') + ratings[i] + '<br />';
+					'<img src="' + labels[i] + '" height="41" />'
+					+ (typeof ratings[i + 1] === 'undefined' ? ' ' : '&ge; ') + ratings[i] + '<br />';
 			}
 			return div;
 		};
