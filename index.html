@@ -12,8 +12,10 @@
 	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 		integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 	<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79/dist/L.Control.Locate.min.css" />
-	<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+	<link rel="stylesheet"
+		href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79/dist/L.Control.Locate.min.css" />
+	<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79/dist/L.Control.Locate.min.js"
+		charset="utf-8"></script>
 	<!-- TODO: integrity -->
 	<style>
 		html,
@@ -113,7 +115,7 @@
 		var map = L.map('map').setView([48.2020, 16.4026], 13);
 		const tiles = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
 			maxZoom: 19,
-			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+			attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
 		}).addTo(map);
 
 		var markers = L.markerClusterGroup({
@@ -171,7 +173,7 @@
 			return div;
 		};
 		legend.addTo(map);
-		
+
 		L.control.locate().addTo(map);
 	</script>
 </body>
