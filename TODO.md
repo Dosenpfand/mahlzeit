@@ -7,5 +7,4 @@
 5. [ ] improve getting rating for currently unavailable
 6. [ ] clusters?
 7. [ ] filter UI
-8. [ ] my location UI
-9. [ ] search UI
+8. [ ] search UI
