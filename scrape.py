@@ -11,8 +11,6 @@ MIN_COORDS = (48.11, 16.21)
 MAX_COORDS = (48.30, 16.56)
 STEP_COUNT = 20
 
-load_dotenv()
-
 
 def get_coords() -> List[Tuple[float, float]]:
     lat_step = (MAX_COORDS[0] - MIN_COORDS[0]) / (STEP_COUNT - 1)
@@ -150,7 +148,7 @@ def write_geojson(restaurants):
 
 
 if __name__ == "__main__":
-    # TODO: correct coords of restaurants that have 48.2, 16.34
+    load_dotenv()
     coords = get_coords()
     scrape_sodexo(coords)
     places = merge_and_clean_dump(coords)
