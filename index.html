@@ -123,7 +123,8 @@
 				var childCount = cluster.getChildCount();
 				var c = ' marker-cluster';
 				return new L.DivIcon({ html: '<div><span><b>' + childCount + '</b></span></div>', className: 'marker-cluster-default' + c, iconSize: new L.Point(40, 40) });
-			}
+			},
+			maxClusterRadius: 30,
 		});
 
 		function onEachFeature(feature, layer) {
