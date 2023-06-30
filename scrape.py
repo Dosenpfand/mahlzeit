@@ -130,12 +130,13 @@ def write_geojson(restaurants):
     )
 
     features = []
-    for restaurant in restaurants:
+    for idx, restaurant in enumerate(restaurants):
         feature = deepcopy(feature_template)
         feature["geometry"]["coordinates"][0] = restaurant["lng"]
         feature["geometry"]["coordinates"][1] = restaurant["lat"]
         feature["properties"]["name"] = restaurant["Vertragspartner"]
         feature["properties"]["rating"] = restaurant.get("rating")
+        feature["id"] = idx
 
         features.append(feature)
 
