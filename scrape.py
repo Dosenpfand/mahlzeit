@@ -79,7 +79,7 @@ def get_rating(query: str) -> float:
     api_key = os.environ["MAPS_API_KEY"]
     url = "https://maps.googleapis.com/maps/api/place/findplacefromtext/json"
     params = dict(input=query, inputtype="textquery", fields="rating", key=api_key)
-    resp = requests.get(url=url, params=params, verify=True)  # TODO: activate verify
+    resp = requests.get(url=url, params=params)
     place = resp.json()
 
     if (not place["status"] == "OK") or (not place["candidates"][0]):
@@ -119,6 +119,65 @@ def filter_restaurants_add_ratings(places, count_process=None):
     return restaurants
 
 
+def update_low_resolution(restaurants, resolution=2):
+    out_path = Path("output", f"restaurants_increased_resolution.json")
+
+    if out_path.exists():
+        with open(out_path) as f:
+            restaurants = json.load(f)
+
+    for idx, restaurant in enumerate(restaurants):
+        lng_dec_len = len(str(restaurant["lng"]).split(".")[1])
+        lat_dec_len = len(str(restaurant["lat"]).split(".")[1])
+
+        if (
+            (lng_dec_len <= resolution)
+            and (lat_dec_len <= resolution)
+            and (not restaurant.get("low_res"))
+        ):
+            coords = get_coords_nominatim(restaurant)
+            if coords:
+                restaurants[idx]["lng"] = coords[0]
+                restaurants[idx]["lat"] = coords[1]
+            else:
+                restaurants[idx]["low_res"] = True
+
+    with open(out_path, "w") as f:
+        json.dump(restaurants, f)
+
+    return restaurants
+
+
+def get_coords_nominatim(restaurant):
+    url = "   https://nominatim.openstreetmap.org/search"
+    user_agent = "https://github.com/Dosenpfand/mahlzeit"
+    headers = {"User-Agent": user_agent}
+
+    params = dict(
+        q=(
+            f"{restaurant['Vertragspartner']},"
+            # f" {restaurant['Adresse']}," TODO!
+            f" {restaurant['Stadt']},"
+            f" Austria"
+        ),
+        format="json",
+    )
+    resp = requests.get(url=url, params=params, headers=headers)
+    nom_result = resp.json()
+
+    if not nom_result:
+        return None
+
+    if isinstance(nom_result, list):
+        nom_result = nom_result[0]
+        # TODO: take closer one, not first one
+
+    if "lat" in nom_result:
+        return (nom_result["lon"], nom_result["lat"])
+    if "centroid" in nom_result:
+        return tuple(nom_result["centroid"]["coordinates"])
+
+
 def write_geojson(restaurants):
     # TODO: check for output file existence
 
@@ -154,4 +213,5 @@ if __name__ == "__main__":
     scrape_sodexo(coords)
     places = merge_and_clean_dump(coords)
     restaurants = filter_restaurants_add_ratings(places)
+    update_low_resolution(restaurants)
     write_geojson(restaurants)
