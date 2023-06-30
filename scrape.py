@@ -7,6 +7,7 @@ import pandas as pd
 from pathlib import Path
 from dotenv import load_dotenv
 from copy import deepcopy
+from geopy.distance import distance
 
 MIN_COORDS = (48.11, 16.21)
 MAX_COORDS = (48.30, 16.56)
@@ -182,6 +183,36 @@ def update_low_resolution(restaurants, resolution=2):
     return restaurants
 
 
+def delete_duplicates(restaurants, max_dist=50):
+    out_path = Path("output", f"restaurants_deleted_duplicates.json")
+
+    if out_path.exists():
+        with open(out_path) as f:
+            restaurants = json.load(f)
+
+    idxs_to_delete = set()
+    for idx, restaurant in enumerate(restaurants):
+        for idx_other, restaurant_other in enumerate(restaurants[idx + 1 :]):
+            if restaurant["Vertragspartner"] == restaurant_other["Vertragspartner"]:
+                dist = distance(
+                    (restaurant["lat"], restaurant["lng"]),
+                    (restaurant_other["lat"], restaurant_other["lng"]),
+                )
+                if dist < max_dist:
+                    idxs_to_delete.add(idx + 1 + idx_other)
+
+    restaurants = [
+        restaurant
+        for idx, restaurant in enumerate(restaurants)
+        if idx not in idxs_to_delete
+    ]
+
+    with open(out_path, "w") as f:
+        json.dump(restaurants, f)
+
+    return restaurants
+
+
 def get_coords_nominatim(query):
     url = "   https://nominatim.openstreetmap.org/search"
     user_agent = "https://github.com/Dosenpfand/mahlzeit"
@@ -242,5 +273,6 @@ if __name__ == "__main__":
     scrape_sodexo(coords)
     places = merge_and_clean_dump(coords)
     restaurants = filter_restaurants_add_ratings(places)
-    update_low_resolution(restaurants)
+    restaurants = update_low_resolution(restaurants)
+    restaurants = delete_duplicates(restaurants)
     write_geojson(restaurants)
