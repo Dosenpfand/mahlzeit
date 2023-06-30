@@ -1,6 +1,7 @@
 import json
+import logging
 import os
-from typing import List, Tuple
+from typing import List, Tuple, Union
 import requests
 import pandas as pd
 from pathlib import Path
@@ -75,17 +76,33 @@ def merge_and_clean_dump(coords: List[Tuple[float, float]]):
     return places_cleaned
 
 
-def get_rating(query: str) -> float:
+def google_request(query: str, fields: Union[List[str], str]):
     api_key = os.environ["MAPS_API_KEY"]
     url = "https://maps.googleapis.com/maps/api/place/findplacefromtext/json"
-    params = dict(input=query, inputtype="textquery", fields="rating", key=api_key)
+
+    fields_str = ",".join(fields) if isinstance(fields, list) else fields
+    params = dict(input=query, inputtype="textquery", fields=fields_str, key=api_key)
     resp = requests.get(url=url, params=params)
     place = resp.json()
 
     if (not place["status"] == "OK") or (not place["candidates"][0]):
         return
 
-    return place["candidates"][0]["rating"]
+    return place
+
+
+def get_rating_google(query: str) -> float:
+    place = google_request(query, "rating")
+
+    if place:
+        return place["candidates"][0]["rating"]
+
+
+def get_coords_google(query):
+    place = google_request(query, "geometry")
+
+    if place:
+        return place["candidates"][0]["geometry"]["location"]
 
 
 def filter_restaurants_add_ratings(places, count_process=None):
@@ -105,9 +122,9 @@ def filter_restaurants_add_ratings(places, count_process=None):
 
             query = f"{restaurant['Vertragspartner']}, {restaurant['Adresse']}, {restaurant['Stadt']}"
             try:
-                rating = get_rating(query)
+                rating = get_rating_google(query)
             except requests.exceptions.ConnectionError:
-                # TODO: warn
+                logging.warning("Connection error, skipping remaining items.")
                 break
             restaurants[idx]["rating"] = rating
 
@@ -135,12 +152,29 @@ def update_low_resolution(restaurants, resolution=2):
             and (lat_dec_len <= resolution)
             and (not restaurant.get("low_res"))
         ):
-            coords = get_coords_nominatim(restaurant)
+            query = (
+                f"{restaurant['Vertragspartner']},"
+                # f" {restaurant['Adresse']}," TODO!
+                f" {restaurant['Stadt']},"
+                f" Austria"
+            )
+            coords = get_coords_nominatim(query)
+
             if coords:
                 restaurants[idx]["lng"] = coords[0]
                 restaurants[idx]["lat"] = coords[1]
             else:
-                restaurants[idx]["low_res"] = True
+                try:
+                    coords = get_coords_google(query)
+                except requests.exceptions.ConnectionError:
+                    logging.warning("Connection error, skipping remaining items.")
+                    break
+
+                if coords:
+                    restaurants[idx]["lng"] = coords["lng"]
+                    restaurants[idx]["lat"] = coords["lat"]
+                else:
+                    restaurants[idx]["low_res"] = True
 
     with open(out_path, "w") as f:
         json.dump(restaurants, f)
@@ -148,18 +182,13 @@ def update_low_resolution(restaurants, resolution=2):
     return restaurants
 
 
-def get_coords_nominatim(restaurant):
+def get_coords_nominatim(query):
     url = "   https://nominatim.openstreetmap.org/search"
     user_agent = "https://github.com/Dosenpfand/mahlzeit"
     headers = {"User-Agent": user_agent}
 
     params = dict(
-        q=(
-            f"{restaurant['Vertragspartner']},"
-            # f" {restaurant['Adresse']}," TODO!
-            f" {restaurant['Stadt']},"
-            f" Austria"
-        ),
+        q=query,
         format="json",
     )
     resp = requests.get(url=url, params=params, headers=headers)
