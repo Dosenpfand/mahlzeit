@@ -14,16 +14,16 @@ STEP_COUNT = 20
 
 def get_coords() -> List[Tuple[float, float]]:
     lat_step = (MAX_COORDS[0] - MIN_COORDS[0]) / (STEP_COUNT - 1)
-    long_step = (MAX_COORDS[1] - MIN_COORDS[1]) / (STEP_COUNT - 1)
+    lon_step = (MAX_COORDS[1] - MIN_COORDS[1]) / (STEP_COUNT - 1)
 
     coords = []
     for lat_idx in range(STEP_COUNT):
         lat = MIN_COORDS[0] + (lat_idx * lat_step)
 
-        for long_idx in range(STEP_COUNT):
-            long = MIN_COORDS[1] + (long_idx * long_step)
+        for lon_idx in range(STEP_COUNT):
+            lon = MIN_COORDS[1] + (lon_idx * lon_step)
 
-            coords.append((round(lat, 4), round(long, 4)))
+            coords.append((round(lat, 4), round(lon, 4)))
 
     return coords
 
