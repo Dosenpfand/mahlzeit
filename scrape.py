@@ -113,7 +113,11 @@ def filter_restaurants_add_ratings(places, count_process=None):
         with open(out_path) as f:
             restaurants = json.load(f)
     else:
-        restaurants = [place for place in places if place["RS"] in [1, "1"]]
+        restaurants = [
+            place
+            for place in places.to_dict(orient="records")
+            if place["RS"] in [1, "1"]
+        ]
 
     count_done = 0
     for idx, restaurant in enumerate(restaurants):
