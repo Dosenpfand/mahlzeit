@@ -8,13 +8,17 @@ from pathlib import Path
 from dotenv import load_dotenv
 from copy import deepcopy
 from geopy.distance import distance
+import click
 
+# Default values
 MIN_COORDS = (48.11, 16.21)
 MAX_COORDS = (48.30, 16.56)
 STEP_COUNT = 20
 
 
-def get_coords() -> List[Tuple[float, float]]:
+def get_coords(
+    min_coords=MIN_COORDS, max_coords=MAX_COORDS, step_count=STEP_COUNT
+) -> List[Tuple[float, float]]:
     lat_step = (MAX_COORDS[0] - MIN_COORDS[0]) / (STEP_COUNT - 1)
     lon_step = (MAX_COORDS[1] - MIN_COORDS[1]) / (STEP_COUNT - 1)
 
@@ -271,12 +275,24 @@ def write_geojson(restaurants):
         json.dump(output, f)
 
 
-if __name__ == "__main__":
+@click.command()
+@click.option("--min-lat", default=MIN_COORDS[0], help="Minimum latitude")
+@click.option("--max-lat", default=MAX_COORDS[0], help="Maximum latitude")
+@click.option("--min-lon", default=MIN_COORDS[1], help="Minimum longitude")
+@click.option("--max-lon", default=MAX_COORDS[1], help="Maximum longitude")
+@click.option(
+    "--step-count", default=STEP_COUNT, help="Number of steps in each dimension"
+)
+def main(min_lat, max_lat, min_lon, max_lon, step_count):
     load_dotenv()
-    coords = get_coords()
+    coords = get_coords((min_lat, min_lon), (max_lat, max_lon), step_count)
     scrape_sodexo(coords)
     places = merge_and_clean_dump(coords)
     restaurants = filter_restaurants_add_ratings(places)
     restaurants = update_low_resolution(restaurants)
     restaurants = delete_duplicates(restaurants)
     write_geojson(restaurants)
+
+
+if __name__ == "__main__":
+    main()
