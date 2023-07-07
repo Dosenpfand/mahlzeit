@@ -16,6 +16,8 @@
 		href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79/dist/L.Control.Locate.min.css" />
 	<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79/dist/L.Control.Locate.min.js"
 		charset="utf-8"></script>
+	<script
+		src="https://unpkg.com/leaflet.markercluster.layersupport@2.0.1/dist/leaflet.markercluster.layersupport.js"></script>
 	<!-- TODO: integrity -->
 	<style>
 		html,
@@ -71,11 +73,11 @@
 	<div id='map'></div>
 	<script src="output/restaurants.js" type="text/javascript"></script>
 	<script>
-		var greenIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png';
-		var yellowIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png'
-		var orangeIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png'
-		var redIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png'
-		var greyIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png'
+		const greenIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png';
+		const yellowIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png'
+		const orangeIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png'
+		const redIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png'
+		const greyIconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png'
 		var greenIcon = new L.Icon({
 			iconUrl: greenIconUrl,
 			iconSize: [25, 41],
@@ -118,7 +120,13 @@
 			attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
 		}).addTo(map);
 
-		var markers = L.markerClusterGroup({
+		const greenLayerGroup = L.layerGroup();
+		const yellowLayerGroup = L.layerGroup();
+		const orangeLayerGroup = L.layerGroup();
+		const redLayerGroup = L.layerGroup();
+		const greyLayerGroup = L.layerGroup();
+
+		var markersClusterGroup = L.markerClusterGroup.layerSupport({
 			showCoverageOnHover: false, iconCreateFunction: function (cluster) {
 				var childCount = cluster.getChildCount();
 				var c = ' marker-cluster';
@@ -131,7 +139,17 @@
 			if (feature.properties && feature.properties.name) {
 				let popupContent = feature.properties.name + '<br />'
 					+ 'Rating: ' + feature.properties.rating;
-				layer.bindPopup(popupContent);
+				if (feature.properties.rating >= 4.5) {
+					layer.bindPopup(popupContent).addTo(greenLayerGroup);
+				} else if (feature.properties.rating >= 4.0) {
+					layer.bindPopup(popupContent).addTo(yellowLayerGroup);
+				} else if (feature.properties.rating >= 3.5) {
+					layer.bindPopup(popupContent).addTo(orangeLayerGroup);
+				} else if (feature.properties.rating >= 0.1) {
+					layer.bindPopup(popupContent).addTo(redLayerGroup);
+				} else {
+					layer.bindPopup(popupContent).addTo(greyLayerGroup);
+				}
 			}
 		}
 
@@ -157,23 +175,30 @@
 			}
 		});
 
-		markers.addLayer(geoJsonLayer);
-		map.addLayer(markers);
+		markersClusterGroup.addLayer(geoJsonLayer);
+		map.addLayer(markersClusterGroup);
 
-		var legend = L.control({ position: 'bottomright' });
-		legend.onAdd = function (map) {
-			var div = L.DomUtil.create('div', 'info legend'),
-				ratings = [4.5, 4, 3.5, 0, 'N/A'],
-				labels = [greenIconUrl, yellowIconUrl, orangeIconUrl, redIconUrl, greyIconUrl];
-			for (var i = 0; i < ratings.length; i++) {
-				icon = yellowIcon.createIcon();
-				div.innerHTML +=
-					'<img src="' + labels[i] + '" height="41" />'
-					+ (typeof ratings[i + 1] === 'undefined' ? ' ' : '&ge; ') + ratings[i] + '<br />';
-			}
-			return div;
+		greenLayerGroup.addTo(map);
+		yellowLayerGroup.addTo(map);
+		orangeLayerGroup.addTo(map);
+		redLayerGroup.addTo(map);
+		greyLayerGroup.addTo(map);
+
+		const greenImg = '<span style="font-size: 2em"><img style="height: 1em" src="' + greenIconUrl + '"/> &ge; 4.5 ⭐</span>';
+		const yellowImg = '<span style="font-size: 2em"><img style="height: 1em" src="' + yellowIconUrl + '"/> &ge; 4.0 ⭐</span>';
+		const orangeImg = '<span style="font-size: 2em"><img style="height: 1em" src="' + orangeIconUrl + '"/> &ge; 3.5 ⭐</span>';
+		const redImg = '<span style="font-size: 2em"><img style="height: 1em" src="' + redIconUrl + '"/> &ge; 0.1 ⭐</span>';
+		const greyImg = '<span style="font-size: 2em"><img style="height: 1em" src="' + greyIconUrl + '"/> N/A ⭐</span>';
+
+		const overlays = {
+			[greenImg]: greenLayerGroup,
+			[yellowImg]: yellowLayerGroup,
+			[orangeImg]: orangeLayerGroup,
+			[redImg]: redLayerGroup,
+			[greyImg]: greyLayerGroup,
 		};
-		legend.addTo(map);
+
+		var layerControl = L.control.layers(null, overlays).addTo(map);
 
 		L.control.locate().addTo(map);
 	</script>
