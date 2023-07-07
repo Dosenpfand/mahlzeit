@@ -9,9 +9,9 @@ from dotenv import load_dotenv
 from copy import deepcopy
 from geopy.distance import distance
 
-MIN_COORDS = (48.29, 14.29)
-MAX_COORDS = (48.32, 14.31)
-STEP_COUNT = 3
+MIN_COORDS = (48.11, 16.21)
+MAX_COORDS = (48.30, 16.56)
+STEP_COUNT = 20
 
 
 def get_coords() -> List[Tuple[float, float]]:
