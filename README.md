@@ -1,4 +1,4 @@
-# Mahlzeit!
+# mahlzeit
 
 Sodexo Restaurant Gutscheine Acceptance + Google Maps ratings shown on a map.
 
