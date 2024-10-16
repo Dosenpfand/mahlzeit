@@ -117,9 +117,9 @@
 		});
 
 		var map = L.map('map').setView([48.2020, 16.4026], 13);
-		const tiles = L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}.png', {
+		const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png ', {
 			maxZoom: 19,
-			attribution: 'Map tiles: <a href="http://stamen.com">Stamen</a> |' +
+			attribution:
 				' Map data: <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> | ' +
 				' Ratings: <a href="https://developers.google.com/maps/documentation/places/web-service/overview">Google Maps</a> | ' +
 				' Voucher acceptance: <a href="https://www.sodexo.at/einloesestellen-suche/">Sodexo</a> | ' +
